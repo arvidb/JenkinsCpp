@@ -12,7 +12,16 @@ using json = nlohmann::json;
 
 namespace jenkinscpp {
     
+    namespace helpers {
+        template<typename T>
+        T unwrapOptional(const json& j, const T& def) {
+            return j.is_null() ? def : j.get<T>();
+        }
+    }
+    
     namespace models {
+        
+        using namespace helpers;
         
         struct ViewDescription {
             std::string name;
@@ -67,9 +76,9 @@ namespace jenkinscpp {
             o.buildDescription._class = j["_class"];
             o.buildDescription.number = j["number"];
             o.buildDescription.url = j["url"];
-            
+
             o.building = j["building"];
-            o.description = j["description"].is_string() ? j["description"] : "";
+            o.description = unwrapOptional(j["description"], std::string(""));
             o.displayName = j["displayName"];
             o.fullDisplayName = j["fullDisplayName"];
             o.id = j["id"];
@@ -78,7 +87,7 @@ namespace jenkinscpp {
             o.estimatedDuration = j["estimatedDuration"];
             o.number = j["number"];
             o.queueId = j["queueId"];
-            o.result = j["result"];
+            o.result = unwrapOptional(j["result"], std::string(""));
             o.timestamp = j["timestamp"];
         }
         
