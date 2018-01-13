@@ -1,5 +1,6 @@
 # JenkinsCpp
 Simple C++ library for interacting with the Jenkins API
+* C++11
 
 # Dependencies
 https://github.com/nlohmann/json
