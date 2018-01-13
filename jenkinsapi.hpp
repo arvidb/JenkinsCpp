@@ -154,21 +154,21 @@ namespace jenkinscpp {
         
         ~JenkinsAPI() {}
         
-        const std::string& GetLastError() { return lastError; };
+        const std::string& getLastError() { return lastError; };
         
-        std::shared_ptr<models::MasterNode> GetMasterNode() {
+        std::shared_ptr<models::MasterNode> getMasterNode() {
             
-            return this->Get<models::MasterNode>("/api/json");
+            return this->get<models::MasterNode>("/api/json");
         };
         
-        std::shared_ptr<models::Job> GetJob(const std::string& name) {
+        std::shared_ptr<models::Job> getJob(const std::string& name) {
             
-            return this->Get<models::Job>("/job/" + name + "/api/json");
+            return this->get<models::Job>("/job/" + name + "/api/json");
         };
         
-        std::shared_ptr<models::Build> GetBuild(const std::string& jobName, const int id) {
+        std::shared_ptr<models::Build> getBuild(const std::string& jobName, const int id) {
             
-            return this->Get<models::Build>("/job/" + jobName + "/" + std::to_string(id) + "/api/json");
+            return this->get<models::Build>("/job/" + jobName + "/" + std::to_string(id) + "/api/json");
         };
         
     private:
@@ -178,7 +178,7 @@ namespace jenkinscpp {
         std::string lastError;
         
         template<typename T>
-        std::shared_ptr<T> Get(const std::string& apiMethod) {
+        std::shared_ptr<T> get(const std::string& apiMethod) {
             
             auto res = restClient.get(apiMethod.c_str(), this->headers);
             if (res && res->status == 200) {
@@ -186,13 +186,13 @@ namespace jenkinscpp {
                 json j = json::parse(res->body);
                 return std::make_shared<T>(j);
             } else {
-                ErrorHandler(res.get());
+                handleError(res.get());
             }
             
             return nullptr;
         };
         
-        void ErrorHandler(const httplib::Response* response) {
+        void handleError(const httplib::Response* response) {
             
             if (response) {
                 
