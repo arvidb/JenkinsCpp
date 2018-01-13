@@ -9,7 +9,7 @@ https://github.com/yhirose/cpp-httplib
 
 # Example
 ```c++
-#include "jenkinsapi.hpp"
+#include "jenkinscpp.hpp"
 
 jenkinscpp::JenkinsAPI api("localhost", 8080, "dGVzdDp0ZXN0");
 
