@@ -12,18 +12,18 @@ https://github.com/yhirose/cpp-httplib
 
 jenkinscpp::JenkinsAPI api("localhost", 8080, "dGVzdDp0ZXN0");
 
-auto jenkins = api.GetMasterNode();
+auto jenkins = api.getMasterNode();
 if (jenkins) {
     for (const auto& jobDesc : jenkins->jobs) {
 
-        auto job = api.GetJob(jobDesc.name);
+        auto job = api.getJob(jobDesc.name);
         if (job && job->lastBuild)  {
 
             std::cout << "Found Job: " << jobDesc.name << " # " << job->description << std::endl;
 
             for (const auto& buildDesc : job->builds) {
 
-                auto build = api.GetBuild(job->jobDescription.name, buildDesc.number);
+                auto build = api.getBuild(job->jobDescription.name, buildDesc.number);
                 if (build) {
 
                     std::cout << "\t" << "Build: " << build->displayName << " # " << build->result << std::endl;
