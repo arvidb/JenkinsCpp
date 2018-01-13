@@ -1,5 +1,5 @@
 # JenkinsCpp
-Simple C++ client for interacting with the Jenkins API
+Simple C++ library for interacting with the Jenkins API
 
 # Dependencies
 https://github.com/nlohmann/json
