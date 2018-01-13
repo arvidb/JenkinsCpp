@@ -14,14 +14,14 @@ namespace jenkinscpp {
     
     namespace models {
         
-        struct View {
+        struct ViewDescription {
             std::string name;
             std::string url;
         };
         
-        void from_json(const json& j, View& o) {
-            o.name = j.at("name").get<std::string>();
-            o.url = j.at("url").get<std::string>();
+        void from_json(const json& j, ViewDescription& o) {
+            o.name = j["name"];
+            o.url = j["url"];
         }
         
         struct JobDescription {
@@ -31,9 +31,9 @@ namespace jenkinscpp {
         };
         
         void from_json(const json& j, JobDescription& o) {
-            o.name = j["name"].get<std::string>();
-            o.url = j["url"].get<std::string>();
-            o.color = j["color"].get<std::string>();
+            o.name = j["name"];
+            o.url = j["url"];
+            o.color = j["color"];
         }
         
         struct BuildDescription {
@@ -43,9 +43,9 @@ namespace jenkinscpp {
         };
         
         void from_json(const json& j, BuildDescription& o) {
-            o._class = j["_class"].get<std::string>();
-            o.number = j["number"].get<int>();
-            o.url = j["url"].get<std::string>();
+            o._class = j["_class"];
+            o.number = j["number"];
+            o.url = j["url"];
         }
         
         struct Build {
@@ -94,28 +94,28 @@ namespace jenkinscpp {
         };
         
         void from_json(const json& j, Job& o) {
-            o.jobDescription.name = j["name"].get<std::string>();
-            o.jobDescription.url = j["url"].get<std::string>();
-            o.jobDescription.color = j["color"].get<std::string>();
+            o.jobDescription.name = j["name"];
+            o.jobDescription.url = j["url"];
+            o.jobDescription.color = j["color"];
             
-            o.description = j["description"].get<std::string>();
+            o.description = j["description"];
             
-            o.displayName = j["displayName"].get<std::string>();
-            o.fullDisplayName = j["fullDisplayName"].get<std::string>();
-            o.fullName = j["fullName"].get<std::string>();
+            o.displayName = j["displayName"];
+            o.fullDisplayName = j["fullDisplayName"];
+            o.fullName = j["fullName"];
             
-            o.buildable = j["buildable"].get<bool>();
+            o.buildable = j["buildable"];
             
             o.builds = j["builds"].get<std::vector<BuildDescription>>();
             
-            o.firstBuild = j["firstBuild"].get<std::shared_ptr<BuildDescription>>();
-            o.lastBuild = j["lastBuild"].get<std::shared_ptr<BuildDescription>>();
-            o.lastCompletedBuild = j["lastCompletedBuild"].get<std::shared_ptr<BuildDescription>>();
-            o.lastFailedBuild = j["lastFailedBuild"].get<std::shared_ptr<BuildDescription>>();
-            o.lastStableBuild = j["lastStableBuild"].get<std::shared_ptr<BuildDescription>>();
-            o.lastSuccessfulBuild = j["lastSuccessfulBuild"].get<std::shared_ptr<BuildDescription>>();
-            o.lastUnstableBuild = j["lastUnstableBuild"].get<std::shared_ptr<BuildDescription>>();
-            o.lastUnsuccessfulBuild = j["lastUnsuccessfulBuild"].get<std::shared_ptr<BuildDescription>>();
+            o.firstBuild = j["firstBuild"];
+            o.lastBuild = j["lastBuild"];
+            o.lastCompletedBuild = j["lastCompletedBuild"];
+            o.lastFailedBuild = j["lastFailedBuild"];
+            o.lastStableBuild = j["lastStableBuild"];
+            o.lastSuccessfulBuild = j["lastSuccessfulBuild"];
+            o.lastUnstableBuild = j["lastUnstableBuild"];
+            o.lastUnsuccessfulBuild = j["lastUnsuccessfulBuild"];
         }
         
         void from_json(const json& j, std::shared_ptr<BuildDescription>& o) {
@@ -129,15 +129,15 @@ namespace jenkinscpp {
             uint32_t numExecutors;
             
             std::vector<JobDescription> jobs;
-            std::vector<View> views;
+            std::vector<ViewDescription> views;
         };
         
         void from_json(const json& j, MasterNode& o) {
-            o.mode = j["mode"].get<std::string>();
-            o.numExecutors = j["numExecutors"].get<int>();
+            o.mode = j["mode"];
+            o.numExecutors = j["numExecutors"];
             
             o.jobs = j["jobs"].get<std::vector<JobDescription>>();
-            o.views = j["views"].get<std::vector<View>>();
+            o.views = j["views"].get<std::vector<ViewDescription>>();
         }
     }
     
