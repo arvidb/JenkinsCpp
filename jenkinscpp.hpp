@@ -13,6 +13,24 @@ using json = nlohmann::json;
 namespace jenkinscpp {
     
     namespace helpers {
+        
+        enum class LogLevel {
+            Error = 0, Info
+        };
+        
+        template <LogLevel L>
+        void Log(const std::string& func, const std::string& msg) {
+            std::string log = "JenkinsCpp - [" + func + "] " + msg;
+            switch (L) {
+                case LogLevel::Error:
+                    std::cerr << "[ERROR] " << log << std::endl;
+                    break;
+                default:
+                    std::cout << "[INFO] " << log << std::endl;
+                    break;
+            }
+        }
+        
         template<typename T>
         T unwrapOptional(const json& j, const T& def) {
             return j.is_null() ? def : j.get<T>();
@@ -150,6 +168,8 @@ namespace jenkinscpp {
         }
     }
     
+    using logLevel = helpers::LogLevel;
+    
     class JenkinsAPI {
     public:
         JenkinsAPI(std::string hostname,
@@ -167,17 +187,32 @@ namespace jenkinscpp {
         
         std::shared_ptr<models::MasterNode> getMasterNode() {
             
-            return this->get<models::MasterNode>("/api/json");
+            return this->getJSON<models::MasterNode>("/api/json");
         };
         
         std::shared_ptr<models::Job> getJob(const std::string& name) {
             
-            return this->get<models::Job>("/job/" + name + "/api/json");
+            return this->getJSON<models::Job>("/job/" + name + "/api/json");
         };
+        
+        void obtainCrumb() {
+            
+            auto res = this->getJSON<json>("/crumbIssuer/api/json");
+            if (res) {
+                this->headers.emplace(res->at("crumbRequestField"), res->at("crumb"));
+            } else if (lastErrorCode == 404) {
+                helpers::Log<logLevel::Info>(__func__, "Jenkins does not require a crumb");
+            }
+        }
+        
+        void buildJob(const std::string& name) {
+            
+            this->post("/job/" + name + "/build", "", "");
+        }
         
         std::shared_ptr<models::Build> getBuild(const std::string& jobName, const int id) {
             
-            return this->get<models::Build>("/job/" + jobName + "/" + std::to_string(id) + "/api/json");
+            return this->getJSON<models::Build>("/job/" + jobName + "/" + std::to_string(id) + "/api/json");
         };
         
     private:
@@ -185,9 +220,12 @@ namespace jenkinscpp {
         httplib::Headers headers;
         
         std::string lastError;
+        int lastErrorCode;
         
         template<typename T>
-        std::shared_ptr<T> get(const std::string& apiMethod) {
+        std::shared_ptr<T> getJSON(const std::string& apiMethod) {
+            
+            resetLastError();
             
             auto res = restClient.get(apiMethod.c_str(), this->headers);
             if (res && res->status == 200) {
@@ -195,22 +233,55 @@ namespace jenkinscpp {
                 json j = json::parse(res->body);
                 return std::make_shared<T>(j);
             } else {
-                handleError(res.get());
+                handleError("GET", res.get());
             }
             
             return nullptr;
         };
         
-        void handleError(const httplib::Response* response) {
+        void post(const std::string& apiMethod, const std::string& body, const std::string& type) {
             
-            if (response) {
+            resetLastError();
+            
+            auto res = restClient.post(apiMethod.c_str(), this->headers, body, type.c_str());
+            if (res && res->status == 201) {
+                
+                // Request success
+            } else {
+                
+                if (res && res->status == 403) {
+                    if (res->body.find("No valid crumb") != std::string::npos) {
+                        handleError("POST", res.get(), "No valid crumb in request, obtain crumb headers by calling obtainCrumb()");
+                    }
+                } else {
+                    handleError("POST", res.get());
+                }
+            }
+        };
+        
+        void resetLastError() {
+            this->lastError = "";
+            this->lastErrorCode = -1;
+        }
+        
+        void handleError(const std::string& method, const httplib::Response* response, const std::string& reason = "") {
+            
+            if (!reason.empty()) {
+                
+                lastError = reason;
+            } else if (response) {
                 
                 lastError = "Got response code " + std::to_string(response->status);
             } else {
+                
                 lastError = "Unknown api error";
             }
             
-            std::cerr << "[ERROR] Jenkins API: " << lastError << std::endl;
+            if (response) {
+                lastErrorCode = response->status;
+            }
+            
+            helpers::Log<logLevel::Error>(method, lastError);
         }
     };
 }
