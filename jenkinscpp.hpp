@@ -183,7 +183,7 @@ namespace jenkinscpp {
         
         ~JenkinsAPI() {}
         
-        const std::string& getLastError() { return lastError; };
+        const std::string& getLastError() const { return lastError; };
         
         std::shared_ptr<models::MasterNode> getMasterNode() {
             
