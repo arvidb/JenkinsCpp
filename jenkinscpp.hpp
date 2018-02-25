@@ -1,9 +1,9 @@
-#ifndef jenkinsapi_h
-#define jenkinsapi_h
+#ifndef JENKINSCPP_HPP
+#define JENKINSCPP_HPP
 
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "httplib.h"
 #include "json.hpp"
@@ -35,11 +35,9 @@ namespace jenkinscpp {
         T unwrapOptional(const json& j, const T& def) {
             return j.is_null() ? def : j.get<T>();
         }
-    }
+    } // namespace helpers
     
     namespace models {
-        
-        using namespace helpers;
         
         struct ViewDescription {
             std::string name;
@@ -65,7 +63,7 @@ namespace jenkinscpp {
         
         struct BuildDescription {
             std::string _class;
-            uint32_t number;
+            uint32_t number = 0;
             std::string url;
         };
         
@@ -77,17 +75,17 @@ namespace jenkinscpp {
         
         struct Build {
             BuildDescription buildDescription;
-            bool building;
             std::string description;
             std::string displayName;
-            uint32_t duration;
-            uint32_t estimatedDuration;
             std::string fullDisplayName;
             std::string id;
-            uint32_t number;
-            uint32_t queueId;
             std::string result;
-            uint64_t timestamp;
+            bool building               = false;
+            uint32_t duration           = 0;
+            uint32_t estimatedDuration  = 0;
+            uint32_t number             = 0;
+            uint32_t queueId            = 0;
+            uint64_t timestamp          = 0;
         };
         
         void from_json(const json& j, Build& o) {
@@ -96,7 +94,7 @@ namespace jenkinscpp {
             o.buildDescription.url = j["url"];
 
             o.building = j["building"];
-            o.description = unwrapOptional(j["description"], std::string(""));
+            o.description = helpers::unwrapOptional(j["description"], std::string(""));
             o.displayName = j["displayName"];
             o.fullDisplayName = j["fullDisplayName"];
             o.id = j["id"];
@@ -105,7 +103,7 @@ namespace jenkinscpp {
             o.estimatedDuration = j["estimatedDuration"];
             o.number = j["number"];
             o.queueId = j["queueId"];
-            o.result = unwrapOptional(j["result"], std::string(""));
+            o.result = helpers::unwrapOptional(j["result"], std::string(""));
             o.timestamp = j["timestamp"];
         }
         
@@ -113,11 +111,10 @@ namespace jenkinscpp {
             JobDescription jobDescription;
             std::string description;
             std::string displayName, fullDisplayName, fullName;
-            bool buildable;
             std::vector<BuildDescription> builds;
             std::shared_ptr<BuildDescription> firstBuild, lastBuild, lastCompletedBuild, lastFailedBuild, lastStableBuild, lastSuccessfulBuild, lastUnstableBuild, lastUnsuccessfulBuild;
-            
-            uint32_t nextBuildNumber;
+            bool buildable              = false;
+            uint32_t nextBuildNumber    = 0;
         };
         
         void from_json(const json& j, Job& o) {
@@ -153,7 +150,7 @@ namespace jenkinscpp {
         
         struct MasterNode {
             std::string mode;
-            uint32_t numExecutors;
+            uint32_t numExecutors = 0;
             
             std::vector<JobDescription> jobs;
             std::vector<ViewDescription> views;
@@ -166,22 +163,23 @@ namespace jenkinscpp {
             o.jobs = j["jobs"].get<std::vector<JobDescription>>();
             o.views = j["views"].get<std::vector<ViewDescription>>();
         }
-    }
+        
+    } // namespace models
     
     using logLevel = helpers::LogLevel;
     
     class JenkinsAPI {
     public:
-        JenkinsAPI(std::string hostname,
+        explicit JenkinsAPI(const std::string& hostname,
                    int port = 80,
-                   std::string basicAuth64 = "") : restClient(hostname.c_str(), port) {
+                   const std::string& basicAuth64 = "") : restClient(hostname.c_str(), port), lastErrorCode(-1) {
             
             if (!basicAuth64.empty()) {
                 headers.emplace("Authorization", "Basic " + basicAuth64);
             }
         };
         
-        ~JenkinsAPI() {}
+        ~JenkinsAPI() = default;
         
         const std::string& getLastError() const { return lastError; };
         
@@ -242,7 +240,6 @@ namespace jenkinscpp {
         void post(const std::string& apiMethod, const std::string& body, const std::string& type) {
             
             resetLastError();
-            
             auto res = restClient.post(apiMethod.c_str(), this->headers, body, type.c_str());
             if (res && res->status == 201) {
                 
@@ -269,7 +266,7 @@ namespace jenkinscpp {
             if (!reason.empty()) {
                 
                 lastError = reason;
-            } else if (response) {
+            } else if (response != nullptr) {
                 
                 lastError = "Got response code " + std::to_string(response->status);
             } else {
@@ -277,13 +274,14 @@ namespace jenkinscpp {
                 lastError = "Unknown api error";
             }
             
-            if (response) {
+            if (response != nullptr) {
                 lastErrorCode = response->status;
             }
             
             helpers::Log<logLevel::Error>(method, lastError);
         }
     };
-}
+    
+} // namespace jenkinscpp
 
-#endif /* jenkinsapi_h */
+#endif /* JENKINSCPP_HPP */
